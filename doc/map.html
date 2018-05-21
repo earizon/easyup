@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+   <meta charset="UTF-8">
+   <title>XXXX map (ignore)</title>
+<head>
+<script src="./map_v1.js"></script>
+<link rel="stylesheet" type="text/css" href="./map_v1.css" />
+</head>
+
+<body onLoad='onPageLoaded()'>
+<b id='initialMessage' orange>Hint double-click/long-press on elements to zoom!!</b>
+<div id='zoomDiv'></div>
+<div style="position:fixed; right:0.3%; bottom:0; width:auto;">
+<b style="font-size:1.5rem" orange><a onclick="onZoomOut()">[-A]</a></b>
+<b style="font-size:1.5rem"       >                                 </b>
+<b style="font-size:2.0rem" orange><a onclick="onZoomIn ()">[A+]</a></b>
+</div>
+<!-- {{{ START }}} -->
+
+<table>
+<tr>
+<td>
+  About:
+  <ul xxxsmall zoom>
+  <li>Keep it simple and stupid: This system just care about easifying the backup part
+    mirrowing content to remote machines with the help of ssh+rsync</li>
+  <li>It doesn't provide any tool to recover. It's up to users/admin to copy back from
+    mirrow copies to restore data</li>
+  </ul>
+
+</td>
+<td>
+  Prerequisites:
+  <ul xxxsmall zoom>
+  <li>Any system compatible with bash+rsync+ssh must work (tested on Linux)</li>
+  </ul>
+  <hr xxxsmall />
+  (Recommended) Ussage:
+  <ul xxxsmall zoom>
+  <li>Mentally divide backups into projects with different dependencies/life-cycles</li>
+  <li>Create a central backup directory for each user with different permissions, for
+     example <code>/home/myUser/easyup/</code>. Inside it create a layout structure
+     similar to:
+<pre>
+etc/easyup.conf   ← Central configuration file (can be created dynamically)
+var/build_config  ← (Optional). Creates etc/easyup.conf before starting the backup
+BACKUP.sh         ← Shell script organizing backups
+</pre>
+</li>
+  <li>Option 1: Create an handwritten <code>etc/easyup.conf</code> with all the info
+    about backups. The file will look similar to:
+<pre>
+/home/user1/project1:myUser1:myRemoteServer1:2211:/var/lib/backups/repositories
+/home/user2/project2:myUser1:myRemoteServer1:2211:/var/lib/backups/repositories
+/home/user2/project1:myUser2:myRemoteServer2:2211:/var/lib/backups/repositories
+/home/user2/project2:myUser2:myRemoteServer2:2211:/var/lib/backups/repositories
+^^^^^^^^^^^^^^^^^^^^ ^^^^^^^ ^^^^^^^^^^^^^^^ ^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+   DIR or FILE        ssh        ssh         ssh   destination (parent) directory
+    to backup         user      server       port  in remote ssh server for mirror
+                                                   copies
+</pre>
+  </li>
+  <li>Option 2:(prefered for all but simplest cases) Create an script 
+    <code>var/build_config</code> in charge of programatically write the etc/easyup.conf.
+    The script, if any, is included in BACKUP.sh and executed "inside" the main script.
+<pre>
+</pre>
+Ex: Backup PRO
+remoteDest1="myRemoteUser:myRemoteBackupServer1.com:2112:/var/lib/backups"
+remoteDest2="myRemoteUser:myRemoteBackupServer2.com:22:/var/lib/backups"
+
+PROJECT01_SRC="/home/myUser/project01" ; PROJECT01_DST1="${remoteDest1}"
+PROJECT02_SRC="/home/myUser/project02" ; PROJECT02_DST1="${remoteDest1}"
+                                       ; PROJECT01_DST2="${remoteDest1}"
+                                       ; PROJECT02_DST2="${remoteDest1}"
+
+# CONFIG_FILE is defined in "parent" BACKUP.sh
+cat << EOF >${CONFIG_FILE}
+${PROJECT01_SRC}:${PROJECT01_DST1}
+${PROJECT02_SRC}:${PROJECT02_DST1}
+${PROJECT01_SRC}:${PROJECT01_DST2}
+${PROJECT02_SRC}:${PROJECT02_DST2}
+EOF
+  </li>
+  <li>
+For each DIR or FILE src BACKUP.sh will check if there is a corresponding
+DIR/easyup.conf or FILE.easyup.conf and include it as part of the bash backup script.
+This script can be used to override default RSYNC_OPTS, including files or directories,...
+<pre>
+# Example ${PROJECT01_SRC}/easyup.conf file. Exclude files from backup/rsync:
+RSYNC_OPTS=""
+RSYNC_OPTS="${RSYNC_OPTS} --exclude 'CEMENTERY' "
+RSYNC_OPTS="${RSYNC_OPTS} --exclude='*logs'     "
+RSYNC_OPTS="${RSYNC_OPTS} --exclude='*class'    "
+RSYNC_OPTS="${RSYNC_OPTS} --exclude='target'    "
+</pre>
+  </li>
+  </ul>
+</td>
+
+</tr>
+</table>
+
+</body>
+<!--
+<span xbig>....</span>
+<pre xxxsmall zoom { >
+</pre }>
+<pre xxxsmall zoom { >
+</pre }>
+-->
+
+</html>
