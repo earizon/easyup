@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html>
    <meta charset="UTF-8">
-   <title>XXXX map (ignore)</title>
+   <title>Easymap</title>
+<style>
+* { font-family: sans; line-height:1.1em; }
+pre { margin: 0; padding:3px; background-color: #DDD; font-family:mono;}
+</style>
+
 <head>
-<script src="./map_v1.js"></script>
-<link rel="stylesheet" type="text/css" href="./map_v1.css" />
+<!--script src="./map_v1.js"></script -->
+<!--link rel="stylesheet" type="text/css" href="./map_v1.css" /-->
 </head>
 
 <body onLoad='onPageLoaded()'>
-<b id='initialMessage' orange>Hint double-click/long-press on elements to zoom!!</b>
 <div id='zoomDiv'></div>
 <div style="position:fixed; right:0.3%; bottom:0; width:auto;">
 <b style="font-size:1.5rem" orange><a onclick="onZoomOut()">[-A]</a></b>
@@ -17,38 +21,37 @@
 </div>
 <!-- {{{ START }}} -->
 
-<table>
-<tr>
-<td>
-  About:
-  <ul xxxsmall zoom>
-  <li>Keep it simple and stupid: This system just care about easifying the backup part
+  <b>ABOUT:</b>
+  <ul zoom>
+  <li>Keep it simple and stupid remote backup script:</li>
+  <li>This system just care about easifying the backup part
     mirrowing content to remote machines with the help of ssh+rsync</li>
-  <li>It doesn't provide any tool to recover. It's up to users/admin to copy back from
-    mirrow copies to restore data</li>
+  <li>It doesn't provide any tool to recover. It's up to users/admin to copy back from mirrow copies to restore data</li>
   </ul>
 
-</td>
-<td>
-  Prerequisites:
-  <ul xxxsmall zoom>
+  <b>PREREQUISITES:</b>
+  <ul>
   <li>Any system compatible with bash+rsync+ssh must work (tested on Linux)</li>
   </ul>
-  <hr xxxsmall />
-  (Recommended) Ussage:
-  <ul xxxsmall zoom>
-  <li>Mentally divide backups into projects with different dependencies/life-cycles</li>
-  <li>Create a central backup directory for each user with different permissions, for
-     example <code>/home/myUser/easyup/</code>. Inside it create a layout structure
-     similar to:
+
+  <b>USSAGE: CONFIGURATION:</b>
+  <ul>
+  <li>Step 1: (recomended) Mentally divide backups into projects with different dependencies/life-cycles</li>
+  <li>Step 2: Create a central backup directory for each user with different permissions, for
+     example <code>/home/myUser/easyup/</code>. Inside it create a layout structure similar to:
 <pre>
 etc/easyup.conf   ← Central configuration file (can be created dynamically)
 var/build_config  ← (Optional). Creates etc/easyup.conf before starting the backup
 BACKUP.sh         ← Shell script organizing backups
 </pre>
 </li>
-  <li>Option 1: Create an handwritten <code>etc/easyup.conf</code> with all the info
-    about backups. The file will look similar to:
+  <li>Step 3. Option 1: Create an handwritten <code>etc/easyup.conf</code> with all the info
+    about backups. The config flow will be:
+<pre>
+ start → etc/easyup.conf → (input to) BACKUP.sh
+</pre>
+  
+  The file will look similar to:
 <pre>
 # lines starting with '#' will be ignored.
 /home/user2/project2:myUser1:myRemoteServer1:2211:/var/lib/backups/repositories
@@ -60,11 +63,16 @@ BACKUP.sh         ← Shell script organizing backups
                                                    copies
 </pre>
   </li>
-  <li>Option 2:(prefered for all but simplest cases) Create an script 
-    <code>var/build_config</code> in charge of programatically write the etc/easyup.conf.
-    The script, if any, is included in BACKUP.sh and executed "inside" the main script.
+  <li>Step 3. Option 2:(prefered for all but the simplest cases) <br/>
+  Create a (bash) script <code>var/build_config</code> in charge of programatically write the etc/easyup.conf<br/>
+    The script, if any, is included in BACKUP.sh and executed "inside" the main script.<br/>
+   The config flow will be:
 <pre>
-Ex: Backup PRO
+ start → exec var/build_config → (output to) → etc/easyup.conf → (input to) → BACKUP.sh
+</pre>
+<br/>
+<pre>
+# Ex: var/build_config
 remoteDest1="myRemoteUser:myRemoteBackupServer1.com:2112:/var/lib/backups"
 remoteDest2="myRemoteUser:myRemoteBackupServer2.com:22:/var/lib/backups"
 
@@ -83,9 +91,8 @@ ${PROJECT02_SRC}:${PROJECT02_DST2}
 EOF
 </pre>
   </li>
-  <li>
-For each DIR or FILE src BACKUP.sh will check if there is a corresponding
-DIR/easyup.conf or FILE.easyup.conf and include it as part of the bash backup script.
+  <li>Step 5 (Optional) *For each DIR or FILE source*, BACKUP.sh will check if there is a corresponding
+<code>$DIR/easyup.conf or $FILE.easyup.conf</code> and include it as part of the bash backup script.
 This script can be used to override default RSYNC_OPTS, including files or directories,...
 <pre>
 # Example ${PROJECT01_SRC}/easyup.conf file. Exclude files from backup/rsync:
@@ -96,9 +103,8 @@ RSYNC_OPTS="${RSYNC_OPTS} --exclude='*class'    "
 RSYNC_OPTS="${RSYNC_OPTS} --exclude='target'    "
 </pre>
   </li>
-  <li>
-For each DIR or FILE src BACKUP.sh will check if there is a corresponding
-DIR/easyup.sh or FILE.easyup.sh and execute it as a separate backup script.
+  <li>Step 5 (Optional) *For each DIR or FILE source*, BACKUP.sh will check if there is a corresponding
+<code>$DIR/easyup.sh or $FILE.easyup.sh</code> and execute it as a separate backup script.
 This script can be used to dump a database, serialize running state, ...
 <pre>
 # Example ${PROJECT01_SRC}/easyup.sh file to dump a Postgresql DDBB
@@ -111,20 +117,12 @@ sudo docker exec ${DOCKER_POSTGRESQL_CONTAINERID} \
     pg_dump --username=$DB_USER $DDBB_NAME 2&gt;&amp;1 | cat - &gt; ddbb.backup.sql
 </pre>
   </li>
-
   </ul>
-</td>
-
-</tr>
-</table>
-
+  <b>USSAGE: EXECUTION:</b>
+  <ul>
+  <li>Once everything is configured just exec ./BACKUP.sh to trigger copies 
+    (or add execution to cron system)</li>
+  <li>Check error logs for backup failures</li>
+  </ul>
 </body>
-<!--
-<span xbig>....</span>
-<pre xxxsmall zoom { >
-</pre }>
-<pre xxxsmall zoom { >
-</pre }>
--->
-
 </html>
