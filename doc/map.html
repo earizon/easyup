@@ -34,6 +34,23 @@ code > * , pre > *
   <li>This system just care about easifying the backup part
     mirrowing content to remote machines with the help of ssh+rsync</li>
   <li>It doesn't provide any tool to recover. It's up to users/admin to copy back from mirrow copies to restore data</li>
+  <li>rsync <code>--link-dest "referenceBackup"</code> is used to create incremental backups based on last-day backup.<br/>
+      <code>--link-dest</code> flag indicates that in case in which a file match in "referenceBackup" and new backup,
+      only a hard-link (not the full file) will be created. This will create two paths to the same file wasting no extra-space.</li>
+  <li>backups "accumulate" on remote destination until they will fill-up the remote hardisk.<br/>
+      This script does NOT care about it. It's up to admin to create a remote script to remove old backups
+      following the UNIX philosophy of "DO ONE THING AND DO IT RIGHT!".<br/>
+      The good news: It's very easy to create such a remote script since backups are tagged with YYYYmmdd suffix. 
+      Example file to remote backups older than 30 days:
+<pre>
+DATE=`date --date='30 day' +%Y%m%d`
+rm -rf /var/backups/repository01/*$DATE 
+# TIP: Notice that rm -rf ...' will just decrease the reference count to existing files
+#      if newer backups still point to a given file that increased the ref.count trough
+#      the --link-dest option
+</pre>
+
+  </li>
   </ul>
 
   <b>PREREQUISITES:</b>
@@ -43,7 +60,7 @@ code > * , pre > *
 
   <b>USSAGE: CONFIGURATION:</b>
   <ul>
-  <li>Step 1: (recomended) Mentally divide backups into projects with different dependencies/life-cycles</li>
+  <li>Step 1: (optional but recomended) Mentally divide backups into projects with different dependencies/life-cycles</li>
   <li>Step 2: Create a central backup directory for each user with different permissions, for
      example <code>/home/myUser/easyup/</code>. Inside it create a layout structure similar to:
 <pre>
