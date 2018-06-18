@@ -8,7 +8,7 @@ code , pre,
 code > * , pre > *
  {
    color: green;
-   margin: 0;
+   margin: 3px;
    background-color: #DDD;
    font-family:mono !important; 
 }
@@ -69,7 +69,7 @@ var/build_config  ← (Optional). Creates etc/easyup.conf before starting the ba
 BACKUP.sh         ← Shell script organizing backups
 </pre>
 </li>
-  <li>Step 3. Option 1: Create an handwritten <code>etc/easyup.conf</code> with all the info
+  <li>Step 3. Alternative 1: (discouraged for all but simplest cases) Create an handwritten <code>etc/easyup.conf</code> with all the info
     about backups. The config flow will be:
 <pre>
  start → etc/easyup.conf → (input to) BACKUP.sh
@@ -88,9 +88,9 @@ BACKUP.sh         ← Shell script organizing backups
                                                    copies
 </pre>
   </li>
-  <li>Step 3. Option 2:(prefered for all but the simplest cases) <br/>
-  Create a (bash) script <code>var/build_config</code> in charge of programatically write the <code>etc/easyup.conf</code><br/>
-    The script is included in BACKUP.sh and executed "inside" the main script.<br/>
+  <li>Step 3. Alternative 2: (prefered for all but the simplest cases) <br/>
+  Create an executable script <code>var/build_config</code> in charge of programatically write the <code>etc/easyup.conf</code><br/>
+    The script is executed by BACKUP.sh to create <code>etc/easyup.conf</code> programatically before reading it as final configuration. <code>var/build_config</code> can use the ENV.VAR 'CONFIG_FILE' to known where the config output is expected to be found.<br/>
    NOTE: Use <code>$CONFIG_FILE</code> instead of <code>etc/easyup.conf</code> to protect from future changes to protect from future changes
    <br/>
    The config flow will be:
@@ -98,8 +98,8 @@ BACKUP.sh         ← Shell script organizing backups
  start → exec var/build_config → (output to) → etc/easyup.conf → (input to) → BACKUP.sh
 </pre>
 <br/>
+  An example <code>var/build_config</code> (bash) script can look similar to:
 <pre>
-# Ex: var/build_config
 remoteDest<b>1</b>="myRemoteUser:myRemoteBackupServer<b>1</b>.com:2112:/var/lib/backups"
 remoteDest<b>2</b>="myRemoteUser:myRemoteBackupServer<b>2</b>.com:22:/var/lib/backups"
 
@@ -117,14 +117,14 @@ ${PROJECT02_SRC}:${remoteDest<b>2</b>}
   </li>
   <li>Step 4 (Optional) *For each DIR or FILE source*, BACKUP.sh will check if there is a corresponding
 <code>$DIR/easyup.conf or $FILE.easyup.conf</code> and include it as part of the bash backup script.
-This script can be used to override default RSYNC_OPTS, including files or directories,...
+This script can be used to override default RSYNC_EXTRA_DIR_OPTS, including files or directories,...
 <pre>
 # Example ${PROJECT01_SRC}/easyup.conf file. Exclude files from backup/rsync:
-RSYNC_OPTS=""
-RSYNC_OPTS="${RSYNC_OPTS} --exclude 'CEMENTERY' "
-RSYNC_OPTS="${RSYNC_OPTS} --exclude='*logs'     "
-RSYNC_OPTS="${RSYNC_OPTS} --exclude='*class'    "
-RSYNC_OPTS="${RSYNC_OPTS} --exclude='target'    "
+RSYNC_EXTRA_DIR_OPTS=""
+RSYNC_EXTRA_DIR_OPTS="${RSYNC_EXTRA_DIR_OPTS} --exclude 'CEMENTERY' "
+RSYNC_EXTRA_DIR_OPTS="${RSYNC_EXTRA_DIR_OPTS} --exclude='*logs'     "
+RSYNC_EXTRA_DIR_OPTS="${RSYNC_EXTRA_DIR_OPTS} --exclude='*class'    "
+RSYNC_EXTRA_DIR_OPTS="${RSYNC_EXTRA_DIR_OPTS} --exclude='target'    "
 </pre>
   </li>
   <li>Step 5 (Optional) *For each DIR or FILE source*, BACKUP.sh will check if there is a corresponding
