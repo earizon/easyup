@@ -35,8 +35,8 @@ export DATE=`date +%Y%m%d_%H.%M`
 REFER0_POSTFIX=`echo -n "."                               `
 REFERA_POSTFIX=`echo -n "." ; date +%Y%m%d --date="-1 day"`
 TARGET_POSTFIX=`echo -n "." ; date +%Y%m%d                `
-(echo -n "start: " ; date ) >$ERR_OUTPUT 
-(echo -n "start: " ; date ) >$STD_OUTPUT 
+echo -n "start: " ; date
+
 if [ -x var/build_config ] ; then
    var/build_config
 fi
@@ -71,21 +71,21 @@ for lineN in $(cat ${CONFIG_FILE} | grep -v "^#") ; do
        bash -x ${SRC}easyup.sh 1>${SRC}easyup.sh.log 2>&1
    fi
    if [[ -f ${SRC} || -d ${SRC} ]] ; then
-       if [[ -d ${SRC} ]] ; then 
+       if [[ -d ${SRC} ]] ; then
            echo $DATE > ${SRC}/easyup.last_backup_date
        else
-           echo $DATE > ${SRC}.easyup.last_backup_date 
+           echo $DATE > ${SRC}.easyup.last_backup_date
        fi
        SRC_REFER0=`echo -n ${DST_DIR0}                                                 `
        SRC_REFERA=`echo -n ${DST_DIR0} ; echo ${SRC}${REFERA_POSTFIX} | sed "s/[/]/_/g"`
        # It could be the case that SRC_REFERA is a symlink to a symlink to a symlink ...
        # Use original (non-symlink) backup reference
-       REMOTE_SCRIPT="readlink -f ${SRC_REFER0}" 
+       REMOTE_SCRIPT="readlink -f ${SRC_REFER0}"
        SRC_REFER0=$(ssh -T -p ${DST_PORT} ${DST_USER}@${DST_HOST} "${REMOTE_SCRIPT}" )
-       REMOTE_SCRIPT="readlink -f ${SRC_REFERA}" 
+       REMOTE_SCRIPT="readlink -f ${SRC_REFERA}"
        SRC_REFERA=$(ssh -T -p ${DST_PORT} ${DST_USER}@${DST_HOST} "${REMOTE_SCRIPT}" )
        SRC_TARGET=`echo -n ${DST_DIR0} ; echo ${SRC}${TARGET_POSTFIX} | sed "s/[/]/_/g"`
-       RSYNC_FULL_OPTS="${RSYNC_DEFAULT_OPTS} ${RSYNC_EXTRA_DIR_OPTS} " 
+       RSYNC_FULL_OPTS="${RSYNC_DEFAULT_OPTS} ${RSYNC_EXTRA_DIR_OPTS} "
        if [ -n ${SRC_REFER0} ]; then
            RSYNC_FULL_OPTS="${RSYNC_FULL_OPTS} --link-dest ${SRC_REFER0} "
        fi
@@ -99,16 +99,15 @@ dry-run:
 - planned execution:
 rsync -e "ssh -T -p ${DST_PORT}" ${RSYNC_FULL_OPTS} ${SRC} ${DST_USER}@${DST_HOST}:${SRC_TARGET}  || echo -n ""
 _________EOF
-       else 
+       else
          rsync -e "ssh -T -p ${DST_PORT}" ${RSYNC_FULL_OPTS} ${SRC} ${DST_USER}@${DST_HOST}:${SRC_TARGET}  || echo -n ""
          # Create sym link if ssh skips backup (no modifications found)
-         REMOTE_SCRIPT="if [[ ! -f $SRC_TARGET && ! -d $SRC_TARGET ]] ; then ln -s ${SRC_REFERA} ${SRC_TARGET} ; fi" 
+         REMOTE_SCRIPT="if [[ ! -f $SRC_TARGET && ! -d $SRC_TARGET ]] ; then ln -s ${SRC_REFERA} ${SRC_TARGET} ; fi"
          ( ssh -T -p ${DST_PORT} ${DST_USER}@${DST_HOST} "${REMOTE_SCRIPT}" ) &
        fi
    else
-       ERROR="failed $SRC copy due to: ${SRC} must be a file or directory" > ${ERR_OUTPUT}
+       echo "failed $SRC copy due to: ${SRC} must be a file or directory"
    fi
    echo "debug: $lineN end ${ERROR}"
 done
-(echo -n "end: " ; date ) >>$ERR_OUTPUT 
-(echo -n "end: " ; date ) >>$STD_OUTPUT 
+echo -n "end: " ; date
